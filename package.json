@@ -1,0 +1,43 @@
+{
+  "name": "js-workshop",
+  "version": "1.0.0",
+  "description": "Advanced JavaScript assignments with unit tests",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:01": "jest 01-deep-clone",
+    "test:02": "jest 02-debounce-throttle",
+    "test:03": "jest 03-custom-bind",
+    "test:04": "jest 04-memoization",
+    "test:05": "jest 05-promise-utilities",
+    "test:06": "jest 06-async-queue",
+    "test:07": "jest 07-retry-with-backoff",
+    "test:08": "jest 08-event-emitter",
+    "test:09": "jest 09-observable",
+    "test:10": "jest 10-lru-cache",
+    "test:11": "jest 11-singleton",
+    "test:12": "jest 12-factory-pattern",
+    "test:13": "jest 13-decorator-pattern",
+    "test:14": "jest 14-middleware-pipeline",
+    "test:15": "jest 15-dependency-injection",
+    "test:16": "jest 16-state-machine",
+    "test:17": "jest 17-command-pattern",
+    "test:18": "jest 18-strategy-pattern",
+    "test:19": "jest 19-proxy-pattern",
+    "test:20": "jest 20-builder-pattern"
+  },
+  "keywords": [
+    "javascript",
+    "workshop",
+    "assignments",
+    "jest",
+    "testing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

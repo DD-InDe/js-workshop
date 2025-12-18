@@ -9,21 +9,21 @@
  * @returns {Function} The debounced function with a cancel() method
  */
 function debounce(fn, delay) {
-  // TODO: Implement debounce
+    let timeoutId;
 
-  // Step 1: Create a variable to store the timeout ID
+    const debounced = function (...args) {
+        const context = this;
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            fn.bind(context)(...args);
+        }, delay);
+    };
 
-  // Step 2: Create the debounced function that:
-  //   - Clears any existing timeout
-  //   - Sets a new timeout to call fn after delay
-  //   - Preserves `this` context and arguments
+    debounced.cancel = function () {
+        clearTimeout(timeoutId);
+    };
 
-  // Step 3: Add a cancel() method to clear pending timeout
-
-  // Step 4: Return the debounced function
-
-  // Return a placeholder that doesn't work
-  throw new Error("Not implemented");
+    return debounced;
 }
 
 /**
@@ -37,23 +37,23 @@ function debounce(fn, delay) {
  * @returns {Function} The throttled function with a cancel() method
  */
 function throttle(fn, limit) {
-  // TODO: Implement throttle
+    let inThrottle;
+    let timeoutId;
 
-  // Step 1: Create variables to track:
-  //   - Whether we're currently in a throttle period
-  //   - The timeout ID for cleanup
+    const throttled = function (...args) {
+        if (inThrottle) return;
 
-  // Step 2: Create the throttled function that:
-  //   - If not throttling, execute fn immediately and start throttle period
-  //   - If throttling, ignore the call
-  //   - Preserves `this` context and arguments
+        fn.apply(this, args);
+        inThrottle = true;
+        timeoutId = setTimeout(() => inThrottle = false, limit);
+    };
 
-  // Step 3: Add a cancel() method to reset throttle state
+    throttled.cancel = function () {
+        clearTimeout(timeoutId);
+        inThrottle = false;
+    };
 
-  // Step 4: Return the throttled function
-
-  // Return a placeholder that doesn't work
-  throw new Error("Not implemented");
+    return throttled;
 }
 
-module.exports = { debounce, throttle };
+module.exports = {debounce, throttle};

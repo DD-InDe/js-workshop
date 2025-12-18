@@ -9,33 +9,48 @@
  * @returns {*} A deep clone of the input value
  */
 function deepClone(value, visited = new WeakMap()) {
-  // TODO: Implement deep cloning
+    if (typeof (value) !== 'object' || value == null) return value;
 
-  // Step 1: Handle primitives (return as-is)
-  // Primitives: null, undefined, number, string, boolean, symbol, bigint
+    if (visited.has(value)) return visited.get(value);
 
-  // Step 2: Check for circular references using the visited WeakMap
-  // If we've seen this object before, return the cached clone
+    switch (Object.prototype.toString.call(value)) {
+        case '[object Date]':
+            return new Date(value);
+        case '[object RegExp]':
+            return new RegExp(value);
+        case '[object Map]':
+            const mapResult = new Map();
+            visited.set(value, mapResult);
 
-  // Step 3: Handle Date objects
-  // Create a new Date with the same time value
+            for (const [k, v] of value) {
+                mapResult.set(deepClone(k, visited), deepClone(v, visited));
+            }
+            return mapResult;
+        case '[object Set]':
+            const setResult = new Set();
+            visited.set(value, setResult);
 
-  // Step 4: Handle RegExp objects
-  // Create a new RegExp with the same source and flags
+            for (const v of value) {
+                setResult.add(deepClone(v,visited));
+            }
+            return setResult;
+        case '[object Array]':
+            const arrayResult = [];
+            visited.set(value, arrayResult);
 
-  // Step 5: Handle Map objects
-  // Create a new Map and deep clone each key-value pair
+            for (const i of value) {
+                arrayResult.push(deepClone(i,visited));
+            }
+            return arrayResult;
+        default:
+            const objectResult = {};
+            visited.set(value, objectResult);
 
-  // Step 6: Handle Set objects
-  // Create a new Set and deep clone each value
-
-  // Step 7: Handle Arrays
-  // Create a new array and deep clone each element
-
-  // Step 8: Handle plain Objects
-  // Create a new object and deep clone each property
-
-  return undefined; // Broken: Replace with your implementation
+            for (const p in value) {
+                objectResult[p] = deepClone(value[p], visited);
+            }
+            return objectResult;
+    }
 }
 
-module.exports = { deepClone };
+module.exports = {deepClone};

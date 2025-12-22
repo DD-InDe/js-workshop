@@ -67,7 +67,7 @@ class AsyncQueue {
      */
     onEmpty(callback) {
         this.emptyCallbacks.push(callback);
-        if (this.size === 0 && this.pending === 0) this._checkEmpty();
+        if (this.queue.length === 0 && this.running === 0) this._checkEmpty();
     }
 
     /**
@@ -129,9 +129,8 @@ class AsyncQueue {
      * @private
      */
     _checkEmpty() {
-        // TODO: If queue is empty and nothing running, call empty callbacks
-        if (this.queue.length === 0 && this.running === 0 && this.pending === 0) {
-            const callbacks = [...this.emptyCallbacks];
+        if (this.queue.length === 0 && this.running === 0) {
+            const callbacks = this.emptyCallbacks;
             this.emptyCallbacks = [];
             callbacks.forEach(item => item());
         }

@@ -8,30 +8,29 @@
  * @returns {Promise} A promise that resolves to an array of results
  */
 function promiseAll(promises) {
-  // TODO: Implement promiseAll
+    const promiseArray = Array.from(promises);
 
-  // Step 1: Convert iterable to array
-  // const promiseArray = Array.from(promises);
+    if (promiseArray.length === 0) return Promise.resolve([]);
 
-  // Step 2: Handle empty array case
-  // Return Promise.resolve([]) for empty input
+    return new Promise((resolve, reject) => {
+            const results = new Array(promiseArray.length);
+            let completed = 0;
 
-  // Step 3: Create a new Promise
-  // return new Promise((resolve, reject) => {
+            for (let i = 0; i < promiseArray.length; i++) {
+                Promise.resolve(promiseArray[i])
+                    .then((value) => {
+                        results[i] = value;
+                        completed++;
 
-  // Step 4: Track results and completion count
-  // const results = new Array(promiseArray.length);
-  // let completed = 0;
-
-  // Step 5: Iterate and handle each promise
-  // - Use Promise.resolve() to handle non-promise values
-  // - On resolve: store result at correct index, increment count
-  // - If all completed: resolve with results array
-  // - On reject: immediately reject the whole promise
-
-  // });
-
-  return Promise.reject(new Error("Not implemented")); // Broken: Replace with your implementation
+                        if (completed === promiseArray.length) {
+                            resolve(results);
+                        }
+                    }).catch(err => {
+                    reject(err);
+                });
+            }
+        }
+    );
 }
 
 /**
@@ -43,19 +42,19 @@ function promiseAll(promises) {
  * @returns {Promise} A promise that settles with the first result
  */
 function promiseRace(promises) {
-  // TODO: Implement promiseRace
+    const promiseArray = Array.from(promises);
 
-  // Step 1: Convert iterable to array
+    if (promiseArray.length === 0) return Promise.race([]);
 
-  // Step 2: Handle empty array (return pending promise)
-  // For empty array, return a promise that never settles
-
-  // Step 3: Create a new Promise
-  // The first promise to settle wins
-
-  // Step 4: For each promise, attach then/catch that resolves/rejects the race
-
-  return new Promise(() => {}); // Replace with your implementation
+    return new Promise((resolve, reject) => {
+        promiseArray.forEach(item => {
+            Promise.resolve(item).then((value) => {
+                resolve(value);
+            }).catch((err) => {
+                reject(err);
+            });
+        });
+    });
 }
 
 /**
@@ -68,24 +67,29 @@ function promiseRace(promises) {
  * @returns {Promise} A promise that resolves to an array of settlement objects
  */
 function promiseAllSettled(promises) {
-  // TODO: Implement promiseAllSettled
+    const promiseArray = Array.from(promises);
 
-  // Step 1: Convert iterable to array
+    if (promiseArray.length === 0) return Promise.allSettled([]);
 
-  // Step 2: Handle empty array case
+    return new Promise((resolve) => {
+        const result = new Array(promiseArray.length);
+        let complete = 0;
 
-  // Step 3: Create a new Promise
+        promiseArray.forEach((item, index) => {
+            Promise.resolve(item)
+                .then(value => {
+                    result[index] = ({status: 'fulfilled', value: value});
+                    complete++;
+                    if (complete === promiseArray.length) resolve(result);
+                })
+                .catch(err => {
+                    result[index] = ({status: 'rejected', reason: err});
+                    complete++;
+                    if (complete === promiseArray.length) resolve(result);
+                });
+        });
 
-  // Step 4: Track results and completion count
-  // Each result is: { status: 'fulfilled', value } or { status: 'rejected', reason }
-
-  // Step 5: For each promise:
-  // - On resolve: store { status: 'fulfilled', value }
-  // - On reject: store { status: 'rejected', reason }
-  // - Never reject the outer promise
-  // - Resolve when all have settled
-
-  return Promise.reject(new Error("Not implemented")); // Broken: Replace with your implementation
+    });
 }
 
 /**
@@ -98,27 +102,25 @@ function promiseAllSettled(promises) {
  * @returns {Promise} A promise that resolves with the first fulfilled value
  */
 function promiseAny(promises) {
-  // TODO: Implement promiseAny
+    const promiseArray = Array.from(promises);
 
-  // Step 1: Convert iterable to array
+    if (promiseArray.length === 0) return Promise.reject(new AggregateError([]));
 
-  // Step 2: Handle empty array (reject with AggregateError)
+    return new Promise((resolve, reject) => {
+        const errors = [];
+        let rejectedCount = 0;
 
-  // Step 3: Create a new Promise
+        promiseArray.forEach(item => {
+            Promise.resolve(item).then(value => {
+                resolve(value);
+            }).catch(err => {
+                errors[rejectedCount] = err;
+                rejectedCount++;
 
-  // Step 4: Track rejection count and errors
-  // const errors = [];
-  // let rejectedCount = 0;
-
-  // Step 5: For each promise:
-  // - On resolve: immediately resolve the outer promise (first wins)
-  // - On reject: collect error, increment count
-  // - If all rejected: reject with AggregateError
-
-  // Note: AggregateError is created like:
-  // new AggregateError(errorsArray, 'All promises were rejected')
-
-  return Promise.reject(new AggregateError([], "No promises")); // Replace
+                if (rejectedCount === promiseArray.length) reject(new AggregateError(errors, 'All promises were rejected'));
+            });
+        });
+    });
 }
 
-module.exports = { promiseAll, promiseRace, promiseAllSettled, promiseAny };
+module.exports = {promiseAll, promiseRace, promiseAllSettled, promiseAny};

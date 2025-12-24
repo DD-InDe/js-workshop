@@ -4,133 +4,175 @@
  * A simple Observable for reactive data streams.
  */
 class Observable {
-  /**
-   * Create an Observable
-   * @param {Function} subscribeFn - Function called with subscriber on subscribe
-   */
-  constructor(subscribeFn) {
-    // TODO: Store the subscribe function
-    // this._subscribeFn = subscribeFn;
-  }
+    /**
+     * Create an Observable
+     * @param {Function} subscribeFn - Function called with subscriber on subscribe
+     */
+    constructor(subscribeFn) {
+        this._subscribeFn = subscribeFn;
+    }
 
-  /**
-   * Subscribe to the Observable
-   * @param {Object|Function} observer - Observer object or next callback
-   * @returns {Object} Subscription with unsubscribe method
-   */
-  subscribe(observer) {
-    // TODO: Implement subscribe
+    /**
+     * Subscribe to the Observable
+     * @param {Object|Function} observer - Observer object or next callback
+     * @returns {Object} Subscription with unsubscribe method
+     */
+    subscribe(observer) {
+        let completed = false;
+        let errored = false;
+        let cleanup;
 
-    // Step 1: Normalize observer (handle function shorthand)
-    // If observer is a function, wrap it: { next: observer }
+        if (typeof observer === 'function') {
+            observer = {next: observer};
+        }
 
-    // Step 2: Create a subscriber object that:
-    //   - Has next, error, complete methods
-    //   - Tracks if completed/errored (stops accepting values)
-    //   - Calls observer methods when appropriate
+        const subscriber = {
+            next: (value) => {
+                if (completed || errored) return;
 
-    // Step 3: Call the subscribe function with the subscriber
+                observer.next && observer.next(value);
+            },
 
-    // Step 4: Handle cleanup function returned by subscribeFn
+            error: (err) => {
+                if (completed || errored) return;
+                errored = true;
 
-    // Step 5: Return subscription object with unsubscribe method
+                observer.error && observer.error(err);
+                cleanup && cleanup();
+            },
 
-    throw new Error("Not implemented");
-  }
+            complete: () => {
+                if (completed || errored) return;
+                completed = true;
 
-  /**
-   * Transform each emitted value
-   * @param {Function} fn - Transform function
-   * @returns {Observable} New Observable with transformed values
-   */
-  map(fn) {
-    // TODO: Implement map operator
+                observer.complete && observer.complete();
+                cleanup && cleanup();
+            }
+        };
+        cleanup = this._subscribeFn(subscriber);
 
-    // Return new Observable that:
-    // - Subscribes to source (this)
-    // - Calls fn on each value
-    // - Emits transformed value
+        return {
+            unsubscribe() {
+                if (completed || errored) return;
 
-    return new Observable(() => {}); // Broken: Replace with implementation
-  }
+                completed = errored = true;
+                cleanup && cleanup();
+            }
+        };
+    }
 
-  /**
-   * Filter emitted values
-   * @param {Function} predicate - Filter function
-   * @returns {Observable} New Observable with filtered values
-   */
-  filter(predicate) {
-    // TODO: Implement filter operator
+    /**
+     * Transform each emitted value
+     * @param {Function} fn - Transform function
+     * @returns {Observable} New Observable with transformed values
+     */
+    map(fn) {
+        return new Observable(subscriber => {
+            const subscription = this.subscribe({
+                next: (value) => subscriber.next(fn(value)),
+                error: (err) => subscriber.error(err),
+                complete: () => subscriber.complete()
+            });
 
-    // Return new Observable that:
-    // - Subscribes to source (this)
-    // - Only emits values where predicate returns true
+            return () => subscription.unsubscribe();
+        });
+    }
 
-    return new Observable(() => {}); // Broken: Replace with implementation
-  }
+    /**
+     * Filter emitted values
+     * @param {Function} predicate - Filter function
+     * @returns {Observable} New Observable with filtered values
+     */
+    filter(predicate) {
+        return new Observable(subscriber => {
+            const subscription = this.subscribe({
+                next: (value) => {
+                    if (predicate(value))
+                        subscriber.next(value);
+                },
+                error: (err) => subscriber.error(err),
+                complete: () => subscriber.complete()
+            });
 
-  /**
-   * Take only first n values
-   * @param {number} count - Number of values to take
-   * @returns {Observable} New Observable limited to count values
-   */
-  take(count) {
-    // TODO: Implement take operator
+            return () => subscription.unsubscribe();
+        });
+    }
 
-    // Return new Observable that:
-    // - Subscribes to source (this)
-    // - Emits first `count` values
-    // - Completes after `count` values
+    /**
+     * Take only first n values
+     * @param {number} count - Number of values to take
+     * @returns {Observable} New Observable limited to count values
+     */
+    take(count) {
+        let step = 1;
 
-    return new Observable(() => {}); // Broken: Replace with implementation
-  }
+        return new Observable(subscriber => {
+            const subscription = this.subscribe({
+                next: (value) => {
+                    if (step > count) {
+                        subscriber.complete();
+                        return;
+                    }
 
-  /**
-   * Skip first n values
-   * @param {number} count - Number of values to skip
-   * @returns {Observable} New Observable that skips first count values
-   */
-  skip(count) {
-    // TODO: Implement skip operator
+                    subscriber.next(value);
+                    step++;
+                },
+                error: (err) => subscriber.error(err),
+                complete: () => subscriber.complete()
+            });
 
-    // Return new Observable that:
-    // - Subscribes to source (this)
-    // - Ignores first `count` values
-    // - Emits remaining values
+            return () => subscription.unsubscribe();
+        });
+    }
 
-    return new Observable(() => {}); // Broken: Replace with implementation
-  }
+    /**
+     * Skip first n values
+     * @param {number} count - Number of values to skip
+     * @returns {Observable} New Observable that skips first count values
+     */
+    skip(count) {
+        let step = 1;
 
-  /**
-   * Create Observable from array
-   * @param {Array} array - Array of values
-   * @returns {Observable} Observable that emits array values
-   */
-  static from(array) {
-    // TODO: Implement from
+        return new Observable(subscriber => {
+            const subscription = this.subscribe({
+                next: (value) => {
+                    if (step <= count) {
+                        step++;
+                        return;
+                    }
 
-    // Return new Observable that:
-    // - Emits each array element
-    // - Completes after last element
+                    subscriber.next(value);
+                },
+                error: (err) => subscriber.error(err),
+                complete: () => subscriber.complete()
+            });
 
-    return new Observable((subscriber) => {
-      // subscriber.next(...) for each
-      // subscriber.complete()
-    });
-  }
+            return () => subscription.unsubscribe();
+        });
+    }
 
-  /**
-   * Create Observable from single value
-   * @param {*} value - Value to emit
-   * @returns {Observable} Observable that emits single value
-   */
-  static of(...values) {
-    // TODO: Implement of
+    /**
+     * Create Observable from array
+     * @param {Array} array - Array of values
+     * @returns {Observable} Observable that emits array values
+     */
+    static from(array) {
+        return new Observable((subscriber) => {
+            array.forEach(item => {
+                subscriber.next(item);
+            });
+            subscriber.complete();
+        });
+    }
 
-    // Return new Observable that emits all values then completes
-
-    return Observable.from(values);
-  }
+    /**
+     * Create Observable from single value
+     * @param {*} value - Value to emit
+     * @returns {Observable} Observable that emits single value
+     */
+    static of(...values) {
+        return Observable.from(values);
+    }
 }
 
-module.exports = { Observable };
+module.exports = {Observable};

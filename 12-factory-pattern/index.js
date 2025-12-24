@@ -4,55 +4,53 @@
 
 // Example shape classes for the factory
 class Circle {
-  constructor({ radius }) {
-    this.radius = radius;
-    this.type = "circle";
-  }
+    constructor({radius}) {
+        this.radius = radius;
+        this.type = "circle";
+    }
 
-  area() {
-    return Math.PI * this.radius ** 2;
-  }
+    area() {
+        return Math.PI * this.radius ** 2;
+    }
 
-  perimeter() {
-    return 2 * Math.PI * this.radius;
-  }
+    perimeter() {
+        return 2 * Math.PI * this.radius;
+    }
 }
 
 class Rectangle {
-  constructor({ width, height }) {
-    this.width = width;
-    this.height = height;
-    this.type = "rectangle";
-  }
+    constructor({width, height}) {
+        this.width = width;
+        this.height = height;
+        this.type = "rectangle";
+    }
 
-  area() {
-    return this.width * this.height;
-  }
+    area() {
+        return this.width * this.height;
+    }
 
-  perimeter() {
-    return 2 * (this.width + this.height);
-  }
+    perimeter() {
+        return 2 * (this.width + this.height);
+    }
 }
 
 class Triangle {
-  constructor({
-    base,
-    height,
-    sides = [base, height, Math.sqrt(base ** 2 + height ** 2)],
-  }) {
-    this.base = base;
-    this.height = height;
-    this.sides = sides;
-    this.type = "triangle";
-  }
+    constructor({
+                    base, height, sides = [base, height, Math.sqrt(base ** 2 + height ** 2)],
+                }) {
+        this.base = base;
+        this.height = height;
+        this.sides = sides;
+        this.type = "triangle";
+    }
 
-  area() {
-    return (this.base * this.height) / 2;
-  }
+    area() {
+        return (this.base * this.height) / 2;
+    }
 
-  perimeter() {
-    return this.sides.reduce((sum, side) => sum + side, 0);
-  }
+    perimeter() {
+        return this.sides.reduce((sum, side) => sum + side, 0);
+    }
 }
 
 /**
@@ -61,22 +59,24 @@ class Triangle {
  * A factory object that creates shapes based on type.
  */
 const ShapeFactory = {
-  // TODO: Implement create method
-
-  /**
-   * Create a shape instance
-   * @param {string} type - Shape type ('circle', 'rectangle', 'triangle')
-   * @param {Object} options - Shape options
-   * @returns {Object} Shape instance
-   */
-  create(type, options) {
-    // TODO: Implement factory logic
-
-    // Use switch or object lookup to create the right shape
-    // Throw error for unknown types
-
-    return null; // Replace with implementation
-  },
+    /**
+     * Create a shape instance
+     * @param {string} type - Shape type ('circle', 'rectangle', 'triangle')
+     * @param {Object} options - Shape options
+     * @returns {Object} Shape instance
+     */
+    create(type, options) {
+        switch (type) {
+            case 'circle':
+                return new Circle(options);
+            case 'rectangle':
+                return new Rectangle(options);
+            case 'triangle':
+                return new Triangle(options);
+            default:
+                throw Error("Unknown type");
+        }
+    },
 };
 
 /**
@@ -85,85 +85,84 @@ const ShapeFactory = {
  * A factory class where types can be registered dynamically.
  */
 class Factory {
-  constructor() {
-    // TODO: Initialize registry
-    // this.registry = new Map();
-  }
+    constructor() {
+        this.registry = new Map();
+    }
 
-  /**
-   * Register a type with the factory
-   * @param {string} type - Type name
-   * @param {Function} Class - Constructor function
-   * @param {Object} [options] - Registration options
-   * @param {string[]} [options.required] - Required argument keys
-   * @param {Function} [options.validate] - Validation function
-   */
-  register(type, Class, options = {}) {
-    // TODO: Implement register
-    // Store the class and options in the registry
-  }
+    /**
+     * Register a type with the factory
+     * @param {string} type - Type name
+     * @param {Function} Class - Constructor function
+     * @param {Object} [options] - Registration options
+     * @param {string[]} [options.required] - Required argument keys
+     * @param {Function} [options.validate] - Validation function
+     */
+    register(type, Class, options = {}) {
+        this.registry.set(type, {Class: Class, options: options});
+    }
 
-  /**
-   * Unregister a type
-   * @param {string} type - Type name
-   * @returns {boolean} true if type was registered
-   */
-  unregister(type) {
-    // TODO: Implement unregister
+    /**
+     * Unregister a type
+     * @param {string} type - Type name
+     * @returns {boolean} true if type was registered
+     */
+    unregister(type) {
+        const registered = this.registry.has(type);
+        if (registered) this.registry.delete(type);
 
-    throw new Error("Not implemented");
-  }
+        return registered;
+    }
 
-  /**
-   * Create an instance of a registered type
-   * @param {string} type - Type name
-   * @param {Object} args - Constructor arguments
-   * @returns {Object} Instance of the type
-   */
-  create(type, args = {}) {
-    // TODO: Implement create
+    /**
+     * Create an instance of a registered type
+     * @param {string} type - Type name
+     * @param {Object} args - Constructor arguments
+     * @returns {Object} Instance of the type
+     */
+    create(type, args = {}) {
+        if (!this.registry.has(type)) throw Error("Unregistered");
 
-    // Step 1: Check if type is registered
+        const {Class, options} = this.registry.get(type);
+        if (args === {}) throw Error("Empty");
 
-    // Step 2: Get the class and options
+        if (options.hasOwnProperty("required")) {
+            const required = options.required;
+            required.forEach(item => {
+                if (!args.hasOwnProperty(item)) throw Error(`Required property: ${item} no exist`);
+            });
+        }
 
-    // Step 3: Validate required fields (if specified)
+        if (options.hasOwnProperty("validate")) {
+            const validation = options.validate;
+            if (!validation(args)) throw Error(`Validation failed`);
+        }
 
-    // Step 4: Run custom validation (if specified)
+        return new Class({...args, ...options});
+    }
 
-    // Step 5: Create and return instance
+    /**
+     * Check if a type is registered
+     * @param {string} type - Type name
+     * @returns {boolean}
+     */
+    has(type) {
+        return this.registry.has(type);
+    }
 
-    return null; // Replace with implementation
-  }
+    /**
+     * Get all registered type names
+     * @returns {string[]}
+     */
+    getTypes() {
+        return Array.of(...this.registry.keys());
+    }
 
-  /**
-   * Check if a type is registered
-   * @param {string} type - Type name
-   * @returns {boolean}
-   */
-  has(type) {
-    // TODO: Implement has
-
-    throw new Error("Not implemented");
-  }
-
-  /**
-   * Get all registered type names
-   * @returns {string[]}
-   */
-  getTypes() {
-    // TODO: Implement getTypes
-
-    throw new Error("Not implemented");
-  }
-
-  /**
-   * Clear all registered types
-   */
-  clear() {
-    // TODO: Implement clear
-    throw new Error("Not implemented");
-  }
+    /**
+     * Clear all registered types
+     */
+    clear() {
+        this.registry.clear();
+    }
 }
 
 /**
@@ -172,73 +171,66 @@ class Factory {
  * Practical example of factory for different logger types.
  */
 class ConsoleLogger {
-  constructor({ prefix = "" } = {}) {
-    this.prefix = prefix;
-  }
+    constructor({prefix = ""} = {}) {
+        this.prefix = prefix;
+    }
 
-  log(message) {
-    console.log(`${this.prefix}${message}`);
-  }
+    log(message) {
+        console.log(`${this.prefix}${message}`);
+    }
 
-  error(message) {
-    console.error(`${this.prefix}ERROR: ${message}`);
-  }
+    error(message) {
+        console.error(`${this.prefix}ERROR: ${message}`);
+    }
 }
 
 class FileLogger {
-  constructor({ path, prefix = "" } = {}) {
-    this.path = path;
-    this.prefix = prefix;
-    this.logs = []; // Simulated file
-  }
+    constructor({path, prefix = ""} = {}) {
+        this.path = path;
+        this.prefix = prefix;
+        this.logs = []; // Simulated file
+    }
 
-  log(message) {
-    this.logs.push(`${this.prefix}${message}`);
-  }
+    log(message) {
+        this.logs.push(`${this.prefix}${message}`);
+    }
 
-  error(message) {
-    this.logs.push(`${this.prefix}ERROR: ${message}`);
-  }
+    error(message) {
+        this.logs.push(`${this.prefix}ERROR: ${message}`);
+    }
 
-  getLogs() {
-    return [...this.logs];
-  }
+    getLogs() {
+        return [...this.logs];
+    }
 }
 
 class JsonLogger {
-  constructor({ includeTimestamp = true } = {}) {
-    this.includeTimestamp = includeTimestamp;
-    this.entries = [];
-  }
-
-  log(message) {
-    this.entries.push(this._createEntry("info", message));
-  }
-
-  error(message) {
-    this.entries.push(this._createEntry("error", message));
-  }
-
-  _createEntry(level, message) {
-    const entry = { level, message };
-    if (this.includeTimestamp) {
-      entry.timestamp = new Date().toISOString();
+    constructor({includeTimestamp = true} = {}) {
+        this.includeTimestamp = includeTimestamp;
+        this.entries = [];
     }
-    return entry;
-  }
 
-  getEntries() {
-    return [...this.entries];
-  }
+    log(message) {
+        this.entries.push(this._createEntry("info", message));
+    }
+
+    error(message) {
+        this.entries.push(this._createEntry("error", message));
+    }
+
+    _createEntry(level, message) {
+        const entry = {level, message};
+        if (this.includeTimestamp) {
+            entry.timestamp = new Date().toISOString();
+        }
+        return entry;
+    }
+
+    getEntries() {
+        return [...this.entries];
+    }
 }
 
 module.exports = {
-  ShapeFactory,
-  Factory,
-  Circle,
-  Rectangle,
-  Triangle,
-  ConsoleLogger,
-  FileLogger,
-  JsonLogger,
+    ShapeFactory, Factory, Circle, Rectangle, Triangle, ConsoleLogger, FileLogger, JsonLogger,
 };

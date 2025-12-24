@@ -8,32 +8,24 @@
  * A class that only allows one instance to exist.
  */
 class Singleton {
-  // TODO: Implement Singleton
+    static instance = null;
 
-  // Step 1: Create a static property to hold the instance
-  // static instance = null;
+    static getInstance() {
+        if (!this.instance)
+            this.instance = new this;
 
-  // Step 2: Create a getInstance static method
-  // - Check if instance exists
-  // - If not, create it
-  // - Return the instance
+        return this.instance;
+    }
 
-  static getInstance() {
-    // TODO: Implement getInstance
-    throw new Error("Not implemented");
-  }
+    constructor() {
+        if (Singleton.instance) {
+            throw new Error('Use Singleton.getInstance()');
+        }
+    }
 
-  // Step 3: Optionally prevent direct instantiation
-  // constructor() {
-  //   if (Singleton.instance) {
-  //     throw new Error('Use Singleton.getInstance()');
-  //   }
-  // }
-
-  // Step 4: Add a reset method for testing
-  static resetInstance() {
-    // TODO: Reset the instance to null
-  }
+    static resetInstance() {
+        this.instance = null;
+    }
 }
 
 /**
@@ -45,28 +37,19 @@ class Singleton {
  * @returns {Object} Object with getInstance method
  */
 function createSingleton(Class) {
-  // TODO: Implement createSingleton
+    let instance = null;
 
-  // Step 1: Create a closure variable to hold the instance
-  // let instance = null;
+    return {
+        getInstance: (...args) => {
+            if (!instance)
+                instance = new Class(...args);
 
-  // Step 2: Return an object with getInstance method
-  // getInstance should:
-  //   - Accept arguments to pass to constructor
-  //   - Only create instance on first call
-  //   - Return the same instance on subsequent calls
-
-  // Step 3: Optionally add resetInstance method
-
-  return {
-    getInstance: (...args) => {
-      // TODO: Implement
-      throw new Error("Not implemented");
-    },
-    resetInstance: () => {
-      // TODO: Implement
-    },
-  };
+            return instance;
+        },
+        resetInstance: () => {
+            instance = null;
+        },
+    };
 }
 
 /**
@@ -75,30 +58,30 @@ function createSingleton(Class) {
  * A practical example of a singleton for database connections.
  */
 class DatabaseConnection {
-  constructor(connectionString) {
-    this.connectionString = connectionString;
-    this.connected = false;
-  }
-
-  connect() {
-    if (!this.connected) {
-      // Simulate connection
-      this.connected = true;
-      console.log(`Connected to ${this.connectionString}`);
+    constructor(connectionString) {
+        this.connectionString = connectionString;
+        this.connected = false;
     }
-    return this;
-  }
 
-  query(sql) {
-    if (!this.connected) {
-      throw new Error("Not connected");
+    connect() {
+        if (!this.connected) {
+            // Simulate connection
+            this.connected = true;
+            console.log(`Connected to ${this.connectionString}`);
+        }
+        return this;
     }
-    return `Executing: ${sql}`;
-  }
 
-  disconnect() {
-    this.connected = false;
-  }
+    query(sql) {
+        if (!this.connected) {
+            throw new Error("Not connected");
+        }
+        return `Executing: ${sql}`;
+    }
+
+    disconnect() {
+        this.connected = false;
+    }
 }
 
 /**
@@ -107,27 +90,27 @@ class DatabaseConnection {
  * A practical example of a singleton for app configuration.
  */
 class AppConfig {
-  constructor() {
-    this.settings = {};
-  }
+    constructor() {
+        this.settings = {};
+    }
 
-  set(key, value) {
-    this.settings[key] = value;
-    return this;
-  }
+    set(key, value) {
+        this.settings[key] = value;
+        return this;
+    }
 
-  get(key) {
-    return this.settings[key];
-  }
+    get(key) {
+        return this.settings[key];
+    }
 
-  getAll() {
-    return { ...this.settings };
-  }
+    getAll() {
+        return {...this.settings};
+    }
 }
 
 module.exports = {
-  Singleton,
-  createSingleton,
-  DatabaseConnection,
-  AppConfig,
+    Singleton,
+    createSingleton,
+    DatabaseConnection,
+    AppConfig,
 };

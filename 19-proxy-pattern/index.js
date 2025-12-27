@@ -10,31 +10,18 @@
  * @returns {Proxy} Proxy that validates on set
  */
 function createValidatingProxy(target, validators) {
-  // TODO: Implement validating proxy
+    return new Proxy(target, {
+        set(obj, prop, value) {
+            const validator = validators[prop];
+            if (validator != null && !validator(value))
+                throw new Error("Validation fails");
+            obj[prop] = value;
+        },
 
-  // Create a Proxy with a handler that:
-  // - On 'set': check if validator exists for property
-  //   - If validator returns false, throw Error
-  //   - Otherwise, set the property
-  // - On 'get': return property value normally
-
-  return new Proxy(target, {
-    set(obj, prop, value) {
-      // TODO: Implement set trap
-      // Check validators[prop](value) if validator exists
-      // Throw if validation fails
-      // Set property if passes
-
-      // Broken: doesn't set at all (fails all tests)
-      return true;
-    },
-
-    get(obj, prop) {
-      // TODO: Implement get trap
-      // Broken: returns wrong value
-      return "NOT_IMPLEMENTED";
-    },
-  });
+        get(obj, prop) {
+            return obj[prop];
+        },
+    });
 }
 
 /**
@@ -45,29 +32,31 @@ function createValidatingProxy(target, validators) {
  * @returns {Proxy} Proxy that logs all operations
  */
 function createLoggingProxy(target, logger) {
-  // TODO: Implement logging proxy
+    return new Proxy(target, {
+        get(obj, prop) {
+            const value = obj[prop];
+            logger('get', prop, value);
 
-  return new Proxy(target, {
-    get(obj, prop) {
-      // TODO: Log 'get' and return value
-      throw new Error("Not implemented");
-    },
+            return value;
+        },
 
-    set(obj, prop, value) {
-      // TODO: Log 'set' and set value
-      throw new Error("Not implemented");
-    },
+        set(obj, prop, value) {
+            logger('set', prop, value);
+            obj[prop] = value;
+        },
 
-    deleteProperty(obj, prop) {
-      // TODO: Log 'delete' and delete property
-      throw new Error("Not implemented");
-    },
+        deleteProperty(obj, prop) {
+            logger('delete', prop, obj[prop]);
+            delete obj[prop];
+        },
 
-    has(obj, prop) {
-      // TODO: Log 'has' and return result
-      throw new Error("Not implemented");
-    },
-  });
+        has(obj, prop) {
+            const value = Object.hasOwn(obj, prop);
+            logger('delete', prop, value);
+
+            return value;
+        },
+    });
 }
 
 /**
@@ -78,26 +67,25 @@ function createLoggingProxy(target, logger) {
  * @returns {Proxy} Proxy that caches method results
  */
 function createCachingProxy(target, methodNames) {
-  // TODO: Implement caching proxy
+    const cache = new Map();
 
-  // Create cache storage
-  // const cache = new Map();
+    return new Proxy(target, {
+        get(obj, prop) {
+            if (!methodNames.includes(prop) || typeof obj[prop] !== 'function') return obj[prop];
 
-  return new Proxy(target, {
-    get(obj, prop) {
-      // TODO: Implement get trap
+            return function (...args) {
+                const key = JSON.stringify(args);
 
-      // If prop is in methodNames and is a function:
-      //   Return a wrapped function that:
-      //   - Creates cache key from arguments
-      //   - Returns cached result if exists
-      //   - Otherwise, calls original, caches, and returns
+                if (cache.has(key))
+                    return cache.get(key);
 
-      // Otherwise, return property normally
+                const value = obj[prop](...args);
+                cache.set(key, value);
 
-      throw new Error("Not implemented");
-    },
-  });
+                return value;
+            }
+        },
+    });
 }
 
 /**
@@ -110,31 +98,31 @@ function createCachingProxy(target, methodNames) {
  * @returns {Proxy} Proxy that enforces access control
  */
 function createAccessProxy(target, permissions) {
-  // TODO: Implement access control proxy
+    const {readable = [], writable = []} = permissions;
 
-  const { readable = [], writable = [] } = permissions;
+    return new Proxy(target, {
+        get(obj, prop) {
+            if (readable.includes(prop)) return obj[prop];
 
-  return new Proxy(target, {
-    get(obj, prop) {
-      // TODO: Check if prop is in readable
-      // Throw if not allowed
-      // Broken: returns wrong value
-      return "NOT_IMPLEMENTED";
-    },
+            throw new Error();
+        },
 
-    set(obj, prop, value) {
-      // TODO: Check if prop is in writable
-      // Throw if not allowed
-      // Broken: doesn't actually set
-      return true;
-    },
+        set(obj, prop, value) {
+            if (writable.includes(prop)) {
+                obj[prop] = value;
+                return true;
+            }
 
-    deleteProperty(obj, prop) {
-      // TODO: Only allow if in writable
-      // Broken: doesn't delete
-      return true;
-    },
-  });
+            throw new Error();
+        },
+
+        deleteProperty(obj, prop) {
+            if (!writable.includes(prop)) return false;
+
+            delete obj[prop];
+            return true;
+        },
+    });
 }
 
 /**
@@ -144,27 +132,29 @@ function createAccessProxy(target, permissions) {
  * @returns {Proxy} Proxy that loads object on first access
  */
 function createLazyProxy(loader) {
-  // TODO: Implement lazy loading proxy
+    let instance = null;
+    let loaded = false;
 
-  let instance = null;
-  let loaded = false;
+    return new Proxy(
+        {},
+        {
+            get(obj, prop) {
+                if (!loaded) {
+                    instance = loader();
+                    loaded = true;
+                }
 
-  return new Proxy(
-    {},
-    {
-      get(obj, prop) {
-        // TODO: Load instance on first access
-        // if (!loaded) { instance = loader(); loaded = true; }
-        // return instance[prop]
-        throw new Error("Not implemented");
-      },
+                return instance[prop];
+            },
 
-      set(obj, prop, value) {
-        // TODO: Load instance if needed, then set
-        throw new Error("Not implemented");
-      },
-    },
-  );
+            set(obj, prop, value) {
+                if (instance == null)
+                    instance = loader();
+
+                instance[prop] = value;
+            },
+        },
+    );
 }
 
 /**
@@ -175,26 +165,25 @@ function createLazyProxy(loader) {
  * @returns {Proxy} Proxy that notifies on changes
  */
 function createObservableProxy(target, onChange) {
-  // TODO: Implement observable proxy
+    return new Proxy(target, {
+        set(obj, prop, value) {
+            onChange(prop, value, obj[prop]);
+            obj[prop] = value;
+        },
 
-  return new Proxy(target, {
-    set(obj, prop, value) {
-      // TODO: Call onChange(prop, value, oldValue) on change
-      throw new Error("Not implemented");
-    },
-
-    deleteProperty(obj, prop) {
-      // TODO: Call onChange on delete
-      throw new Error("Not implemented");
-    },
-  });
+        deleteProperty(obj, prop) {
+            const oldValue = obj[prop];
+            onChange(prop, undefined, oldValue);
+            delete obj[prop];
+        },
+    });
 }
 
 module.exports = {
-  createValidatingProxy,
-  createLoggingProxy,
-  createCachingProxy,
-  createAccessProxy,
-  createLazyProxy,
-  createObservableProxy,
+    createValidatingProxy,
+    createLoggingProxy,
+    createCachingProxy,
+    createAccessProxy,
+    createLazyProxy,
+    createObservableProxy,
 };
